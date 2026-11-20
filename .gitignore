@@ -1,0 +1,7 @@
+node_modules/
+demo/dist/
+# macOS leaves an AppleDouble sidecar beside every file on this ExFAT volume.
+# They break Prisma and confuse bundlers that glob a directory, so they are
+# never committed. `npm run clean` deletes them.
+._*
+.DS_Store

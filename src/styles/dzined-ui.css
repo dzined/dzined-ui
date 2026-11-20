@@ -1,0 +1,580 @@
+/*
+ * @dzined/ui tokens and styles.
+ *
+ * Everything visual goes through a `--dz-*` custom property. The library never
+ * reads an MUI theme, for two reasons we learned the hard way on 19 and 20
+ * November 2026:
+ *
+ *  1. `cloud.main` is referenced in 39 files of the portal and
+ *     `cloud.buttonPrimary` in 11, and neither is a key in the palette. MUI
+ *     resolves an unknown palette path to nothing and says nothing about it, so
+ *     those are backgrounds that have never once applied. A component that
+ *     reaches into a theme by string path can fail that silently forever. A
+ *     component that reads a CSS custom property falls back to the value right
+ *     here in this file, which is a value somebody chose.
+ *  2. A nested `styleOverrides` beats `sx`, and `styleOverrides` is plain CSS,
+ *     so a palette path inside one is simply dropped by the browser. A
+ *     `MuiTabs` override asking for `color: "cloud.primary"` left 43 pages on
+ *     MUI's factory blue for months. Custom properties cascade the normal way
+ *     and can be overridden per instance without a specificity fight.
+ *
+ * The defaults below are the portal's real values, read out of
+ * work/src/theme/lightTheme.js and darkTheme.js. A consumer that wants its own
+ * palette sets the properties; a consumer that wants none gets Axle's.
+ */
+
+/*
+ * The defaults go on :root and on an explicit light scope, and nowhere else.
+ *
+ * They were briefly also on `.dz-scope`, the class every component carries, and
+ * that quietly broke dark mode: `.dz-scope` sits *on* the component, so a light
+ * value declared there beat the dark value inherited from the <html> element
+ * and the calendar stayed white on a navy page. Custom properties are
+ * inherited, so a component must never redeclare a token it wants to receive.
+ * `.dz-scope` is a namespace for the component styles below, not a place to set
+ * tokens.
+ */
+:root,
+[data-dz-theme="light"] {
+	--dz-font: inherit;
+	--dz-font-size: 14px;
+
+	/* Surfaces. cloud.surface.bg over cloud.bg. */
+	--dz-surface: #ffffff;
+	--dz-surface-sunken: #f7f6f3;
+	--dz-surface-hover: #e9edf7;
+	--dz-surface-active: #e3e7f6;
+
+	/* Lines. divider and cloud.border are the same #d5dbeb in light mode. */
+	--dz-border: #d5dbeb;
+	--dz-border-strong: #b7bfd8;
+
+	/* Ink. cloud.text and cloud.textLighter. */
+	--dz-text: #505470;
+	--dz-text-strong: #12214a;
+	--dz-text-muted: #7b7fa3;
+	--dz-text-disabled: #b9bccf;
+
+	/* Accent. primary.main / primary.dark / primary.darkHover. */
+	--dz-accent: #1642a5;
+	--dz-accent-hover: #10368d;
+	--dz-accent-active: #09276d;
+	--dz-accent-contrast: #ffffff;
+	/* The range fill and the hover preview are the accent at low alpha, the same
+	   way cloud.sidebarSelected is rgba(22, 66, 165, 0.08). */
+	--dz-accent-wash: rgba(22, 66, 165, 0.1);
+	--dz-accent-wash-soft: rgba(22, 66, 165, 0.05);
+
+	/* Today's ring. secondary.main, so it cannot be confused with selection. */
+	--dz-today: #cd189a;
+
+	--dz-danger: #d32f2f;
+
+	/*
+	 * shape.borderRadius in the portal is 2, so the panel and the input match the
+	 * rest of Axle. Day cells are round regardless: a 2px square that fills with
+	 * colour reads as a block of a table, and a circle reads as a chosen day.
+	 * MUI is right about this one.
+	 */
+	--dz-radius: 2px;
+	--dz-radius-day: 50%;
+
+	--dz-shadow: 0 6px 24px rgba(9, 15, 37, 0.14), 0 1px 2px rgba(9, 15, 37, 0.1);
+	--dz-focus-ring: 0 0 0 2px var(--dz-surface), 0 0 0 4px var(--dz-accent);
+
+	--dz-day-size: 36px;
+	--dz-gap: 2px;
+	--dz-duration: 120ms;
+}
+
+/*
+ * Dark mode is opt-in through `data-dz-theme="dark"` on any ancestor, because
+ * the portal's dark mode is a per-browser setting in localStorage and not the OS
+ * preference. `data-dz-theme="auto"` is there for the standalone sites, which
+ * have no setting of their own.
+ *
+ * Values are darkTheme.js: cloud.dark for the panel, primary.border for lines,
+ * primary.main (which is teal in dark mode, not blue) for the accent, and
+ * cloud.sidebarAccent for today.
+ */
+[data-dz-theme="dark"] {
+	--dz-surface: #12214a;
+	--dz-surface-sunken: #0a1739;
+	--dz-surface-hover: #394566;
+	--dz-surface-active: #4a5580;
+
+	--dz-border: #364676;
+	--dz-border-strong: #4a5580;
+
+	--dz-text: rgba(255, 255, 255, 0.86);
+	--dz-text-strong: #ffffff;
+	--dz-text-muted: rgba(255, 255, 255, 0.58);
+	--dz-text-disabled: rgba(255, 255, 255, 0.26);
+
+	--dz-accent: #18cdc7;
+	--dz-accent-hover: #0e908b;
+	--dz-accent-active: #0d7c77;
+	--dz-accent-contrast: #0a1739;
+	--dz-accent-wash: rgba(24, 205, 199, 0.16);
+	--dz-accent-wash-soft: rgba(24, 205, 199, 0.08);
+
+	--dz-today: #7c93ff;
+	--dz-danger: #ea3368;
+
+	--dz-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+	[data-dz-theme="auto"] {
+		--dz-surface: #12214a;
+		--dz-surface-sunken: #0a1739;
+		--dz-surface-hover: #394566;
+		--dz-surface-active: #4a5580;
+		--dz-border: #364676;
+		--dz-border-strong: #4a5580;
+		--dz-text: rgba(255, 255, 255, 0.86);
+		--dz-text-strong: #ffffff;
+		--dz-text-muted: rgba(255, 255, 255, 0.58);
+		--dz-text-disabled: rgba(255, 255, 255, 0.26);
+		--dz-accent: #18cdc7;
+		--dz-accent-hover: #0e908b;
+		--dz-accent-active: #0d7c77;
+		--dz-accent-contrast: #0a1739;
+		--dz-accent-wash: rgba(24, 205, 199, 0.16);
+		--dz-accent-wash-soft: rgba(24, 205, 199, 0.08);
+		--dz-today: #7c93ff;
+		--dz-danger: #ea3368;
+		--dz-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+	}
+}
+
+/* ---------------------------------------------------------------- utilities */
+
+.dz-visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* -------------------------------------------------------------------- input */
+
+.dz-field {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 4px;
+	font-family: var(--dz-font);
+	font-size: var(--dz-font-size);
+	color: var(--dz-text);
+	min-width: 0;
+}
+
+.dz-field-label {
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	color: var(--dz-text-muted);
+}
+
+.dz-input-shell {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	box-sizing: border-box;
+	min-height: 40px;
+	padding: 0 4px 0 10px;
+	background: var(--dz-surface);
+	border: 1px solid var(--dz-border);
+	border-radius: var(--dz-radius);
+	transition: border-color var(--dz-duration) ease,
+		box-shadow var(--dz-duration) ease;
+}
+
+.dz-input-shell:hover:not([data-disabled="true"]) {
+	border-color: var(--dz-border-strong);
+}
+
+/*
+ * The ring goes on the shell, not the `input`, and is driven by `:focus-within`.
+ * Putting it on the input leaves the trailing buttons outside the ring, so the
+ * control looks like two separate things whenever it is focused.
+ */
+.dz-input-shell:focus-within {
+	border-color: var(--dz-accent);
+	box-shadow: 0 0 0 3px var(--dz-accent-wash);
+}
+
+.dz-input-shell[data-invalid="true"] {
+	border-color: var(--dz-danger);
+}
+
+.dz-input-shell[data-invalid="true"]:focus-within {
+	box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.16);
+}
+
+.dz-input-shell[data-disabled="true"] {
+	background: var(--dz-surface-sunken);
+	color: var(--dz-text-disabled);
+}
+
+.dz-input {
+	flex: 1 1 auto;
+	min-width: 7ch;
+	width: 100%;
+	padding: 8px 0;
+	font: inherit;
+	color: inherit;
+	background: none;
+	border: 0;
+	outline: none;
+}
+
+.dz-input::placeholder {
+	color: var(--dz-text-muted);
+	opacity: 1;
+}
+
+.dz-icon-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 30px;
+	height: 30px;
+	padding: 0;
+	color: var(--dz-text-muted);
+	background: none;
+	border: 0;
+	border-radius: var(--dz-radius);
+	cursor: pointer;
+	transition: background var(--dz-duration) ease, color var(--dz-duration) ease;
+}
+
+.dz-icon-button:hover:not(:disabled) {
+	color: var(--dz-text-strong);
+	background: var(--dz-surface-hover);
+}
+
+.dz-icon-button:focus-visible {
+	outline: none;
+	box-shadow: var(--dz-focus-ring);
+}
+
+.dz-icon-button:disabled {
+	color: var(--dz-text-disabled);
+	cursor: default;
+}
+
+.dz-field-message {
+	min-height: 1em;
+	font-size: 12px;
+	color: var(--dz-text-muted);
+}
+
+.dz-field-message[data-invalid="true"] {
+	color: var(--dz-danger);
+}
+
+/* ------------------------------------------------------------------ popover */
+
+.dz-popover {
+	position: absolute;
+	z-index: var(--dz-popover-z, 1300);
+	margin: 0;
+	padding: 0;
+	border: 0;
+	/* The popover is rendered in place rather than in a portal; see DzDatePicker. */
+	animation: dz-pop var(--dz-duration) ease-out;
+}
+
+@keyframes dz-pop {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.dz-popover {
+		animation: none;
+	}
+	.dz-input-shell,
+	.dz-icon-button,
+	.dz-day {
+		transition: none;
+	}
+}
+
+/* ----------------------------------------------------------------- calendar */
+
+.dz-calendar {
+	box-sizing: border-box;
+	display: inline-block;
+	padding: 10px;
+	font-family: var(--dz-font);
+	font-size: var(--dz-font-size);
+	color: var(--dz-text);
+	background: var(--dz-surface);
+	border: 1px solid var(--dz-border);
+	border-radius: var(--dz-radius);
+	box-shadow: var(--dz-shadow);
+}
+
+.dz-calendar[data-flat="true"] {
+	border-radius: var(--dz-radius);
+	box-shadow: none;
+}
+
+.dz-calendar-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 4px;
+	padding: 0 2px 6px;
+}
+
+.dz-calendar-title {
+	flex: 1 1 auto;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 4px 8px;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--dz-text-strong);
+	background: none;
+	border: 0;
+	border-radius: var(--dz-radius);
+	cursor: pointer;
+}
+
+.dz-calendar-title:hover {
+	background: var(--dz-surface-hover);
+}
+
+.dz-calendar-title:focus-visible {
+	outline: none;
+	box-shadow: var(--dz-focus-ring);
+}
+
+.dz-calendar-title svg {
+	transition: transform var(--dz-duration) ease;
+}
+
+.dz-calendar-title[aria-expanded="true"] svg {
+	transform: rotate(180deg);
+}
+
+.dz-calendar-nav {
+	display: inline-flex;
+	gap: 2px;
+}
+
+.dz-grid {
+	border-collapse: separate;
+	border-spacing: var(--dz-gap);
+	table-layout: fixed;
+}
+
+.dz-grid th {
+	width: var(--dz-day-size);
+	padding: 2px 0 6px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--dz-text-muted);
+}
+
+.dz-grid td {
+	padding: 0;
+}
+
+/*
+ * The range fill is painted on the cell and the circle on the button inside it,
+ * so a continuous band runs behind the round endpoints instead of breaking into
+ * seven separate pills. `border-spacing` would leave gaps in that band, so the
+ * fill is drawn with a box-shadow spread sideways rather than a background.
+ */
+.dz-cell[data-in-range="true"],
+.dz-cell[data-preview="true"] {
+	background: var(--dz-accent-wash-soft);
+	box-shadow: calc(var(--dz-gap) * -1) 0 0 var(--dz-accent-wash-soft),
+		var(--dz-gap) 0 0 var(--dz-accent-wash-soft);
+}
+
+.dz-cell[data-in-range="true"] {
+	background: var(--dz-accent-wash);
+	box-shadow: calc(var(--dz-gap) * -1) 0 0 var(--dz-accent-wash),
+		var(--dz-gap) 0 0 var(--dz-accent-wash);
+}
+
+.dz-cell[data-range-start="true"] {
+	border-top-left-radius: var(--dz-radius-day);
+	border-bottom-left-radius: var(--dz-radius-day);
+	box-shadow: var(--dz-gap) 0 0 var(--dz-accent-wash);
+}
+
+.dz-cell[data-range-end="true"] {
+	border-top-right-radius: var(--dz-radius-day);
+	border-bottom-right-radius: var(--dz-radius-day);
+	box-shadow: calc(var(--dz-gap) * -1) 0 0 var(--dz-accent-wash);
+}
+
+.dz-day {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	width: var(--dz-day-size);
+	height: var(--dz-day-size);
+	padding: 0;
+	font: inherit;
+	font-variant-numeric: tabular-nums;
+	color: var(--dz-text);
+	background: none;
+	border: 1px solid transparent;
+	border-radius: var(--dz-radius-day);
+	cursor: pointer;
+	transition: background var(--dz-duration) ease, color var(--dz-duration) ease;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.dz-day[data-outside="true"] {
+	color: var(--dz-text-muted);
+}
+
+.dz-day:hover:not([aria-disabled="true"]):not([aria-selected="true"]) {
+	background: var(--dz-surface-hover);
+}
+
+.dz-day:focus-visible {
+	outline: none;
+	box-shadow: var(--dz-focus-ring);
+}
+
+.dz-day[data-today="true"] {
+	border-color: var(--dz-today);
+	font-weight: 700;
+}
+
+.dz-day[aria-selected="true"] {
+	color: var(--dz-accent-contrast);
+	background: var(--dz-accent);
+	border-color: var(--dz-accent);
+	font-weight: 600;
+}
+
+.dz-day[aria-selected="true"]:hover {
+	background: var(--dz-accent-hover);
+	border-color: var(--dz-accent-hover);
+}
+
+/*
+ * A disabled day keeps its tab stop and stays reachable by the arrow keys. It
+ * is marked `aria-disabled`, not `disabled`, so a screen reader can say "20
+ * November, dimmed" instead of the day vanishing from the grid and the arrow
+ * keys appearing to skip rows for no stated reason.
+ */
+.dz-day[aria-disabled="true"] {
+	color: var(--dz-text-disabled);
+	cursor: default;
+}
+
+.dz-day[aria-disabled="true"][data-today="true"] {
+	border-color: var(--dz-text-disabled);
+}
+
+/* ------------------------------------------------- month and year shortlist */
+
+.dz-shortlist {
+	display: grid;
+	gap: var(--dz-gap);
+	box-sizing: border-box;
+	width: calc(
+		(var(--dz-day-size) + var(--dz-gap) * 2) * 7
+	);
+	max-height: calc((var(--dz-day-size) + var(--dz-gap) * 2) * 6 + 24px);
+	padding: 2px;
+	overflow-y: auto;
+	grid-template-columns: repeat(3, 1fr);
+}
+
+.dz-shortlist-item {
+	padding: 10px 4px;
+	font: inherit;
+	color: var(--dz-text);
+	background: none;
+	border: 1px solid transparent;
+	border-radius: var(--dz-radius);
+	cursor: pointer;
+}
+
+.dz-shortlist-item:hover:not(:disabled) {
+	background: var(--dz-surface-hover);
+}
+
+.dz-shortlist-item:focus-visible {
+	outline: none;
+	box-shadow: var(--dz-focus-ring);
+}
+
+.dz-shortlist-item[aria-pressed="true"] {
+	color: var(--dz-accent-contrast);
+	background: var(--dz-accent);
+	font-weight: 600;
+}
+
+.dz-shortlist-item:disabled {
+	color: var(--dz-text-disabled);
+	cursor: default;
+}
+
+/* ------------------------------------------------------------------- footer */
+
+.dz-calendar-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-top: 6px;
+	padding-top: 8px;
+	border-top: 1px solid var(--dz-border);
+}
+
+.dz-text-button {
+	padding: 6px 10px;
+	font: inherit;
+	font-weight: 600;
+	font-size: 13px;
+	color: var(--dz-accent);
+	background: none;
+	border: 0;
+	border-radius: var(--dz-radius);
+	cursor: pointer;
+}
+
+.dz-text-button:hover:not(:disabled) {
+	background: var(--dz-accent-wash);
+}
+
+.dz-text-button:focus-visible {
+	outline: none;
+	box-shadow: var(--dz-focus-ring);
+}
+
+.dz-text-button:disabled {
+	color: var(--dz-text-disabled);
+	cursor: default;
+}

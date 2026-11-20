@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en-GB" data-dz-theme="light">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>@dzined/ui date picker</title>
+		<link rel="stylesheet" href="./dist/demo.css" />
+		<style>
+			/*
+			 * Demo chrome only. Nothing here is part of the library, and the library
+			 * is given no styles beyond its own stylesheet, so what you see is what a
+			 * consumer gets out of the box.
+			 */
+			:root {
+				--page: #f7f6f3;
+				--card: #ffffff;
+				--line: #d5dbeb;
+				--ink: #12214a;
+				--ink-soft: #505470;
+			}
+			html[data-dz-theme="dark"] {
+				--page: #090f25;
+				--card: #12214a;
+				--line: #364676;
+				--ink: #ffffff;
+				--ink-soft: rgba(255, 255, 255, 0.66);
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				padding: 0 0 80px;
+				font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+					Roboto, Helvetica, Arial, sans-serif;
+				font-size: 14px;
+				color: var(--ink-soft);
+				background: var(--page);
+				-webkit-font-smoothing: antialiased;
+			}
+			header {
+				position: sticky;
+				top: 0;
+				z-index: 10;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 16px;
+				padding: 14px 28px;
+				background: var(--card);
+				border-bottom: 1px solid var(--line);
+			}
+			header h1 {
+				margin: 0;
+				font-size: 16px;
+				font-weight: 700;
+				color: var(--ink);
+			}
+			header p {
+				margin: 2px 0 0;
+				font-size: 12px;
+			}
+			main {
+				max-width: 1100px;
+				margin: 0 auto;
+				padding: 28px;
+			}
+			section {
+				margin: 0 0 28px;
+				padding: 22px;
+				background: var(--card);
+				border: 1px solid var(--line);
+				border-radius: 2px;
+			}
+			section > h2 {
+				margin: 0 0 4px;
+				font-size: 14px;
+				font-weight: 700;
+				color: var(--ink);
+			}
+			section > p.note {
+				margin: 0 0 18px;
+				max-width: 70ch;
+				font-size: 13px;
+				line-height: 1.55;
+			}
+			.row {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 28px;
+				align-items: flex-start;
+			}
+			.col {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				min-width: 220px;
+			}
+			.tag {
+				font-size: 11px;
+				font-weight: 700;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+				color: var(--ink-soft);
+			}
+			.readout {
+				padding: 10px 12px;
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				font-size: 12px;
+				line-height: 1.6;
+				color: var(--ink-soft);
+				background: var(--page);
+				border: 1px solid var(--line);
+				border-radius: 2px;
+				white-space: pre-wrap;
+			}
+			.toggle {
+				padding: 7px 14px;
+				font: inherit;
+				font-weight: 600;
+				color: var(--ink);
+				background: var(--page);
+				border: 1px solid var(--line);
+				border-radius: 2px;
+				cursor: pointer;
+			}
+			table.keys {
+				border-collapse: collapse;
+				font-size: 13px;
+			}
+			table.keys td {
+				padding: 5px 18px 5px 0;
+				border-bottom: 1px solid var(--line);
+			}
+			table.keys kbd {
+				display: inline-block;
+				padding: 2px 6px;
+				font-family: ui-monospace, Menlo, monospace;
+				font-size: 11px;
+				color: var(--ink);
+				background: var(--page);
+				border: 1px solid var(--line);
+				border-radius: 2px;
+			}
+			.shortcuts {
+				display: flex;
+				flex-direction: column;
+				gap: 2px;
+				padding-right: 14px;
+				border-right: 1px solid var(--line);
+			}
+			.shortcuts button {
+				padding: 7px 12px;
+				font: inherit;
+				font-size: 13px;
+				text-align: left;
+				color: var(--ink-soft);
+				background: none;
+				border: 0;
+				border-radius: 2px;
+				cursor: pointer;
+				white-space: nowrap;
+			}
+			.shortcuts button:hover {
+				background: var(--page);
+				color: var(--ink);
+			}
+		</style>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="module" src="./dist/demo.js"></script>
+	</body>
+</html>

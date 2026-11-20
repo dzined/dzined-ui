@@ -1,0 +1,36 @@
+{
+	"name": "@dzined/ui",
+	"version": "0.1.0",
+	"description": "Dzined's own React components. Starts with a date picker.",
+	"license": "UNLICENSED",
+	"private": true,
+	"type": "module",
+	"repository": "github:dzined/dzined-ui",
+	"sideEffects": [
+		"*.css"
+	],
+	"exports": {
+		".": "./src/index.js",
+		"./styles.css": "./src/styles/dzined-ui.css",
+		"./core": "./src/core/index.js"
+	},
+	"files": [
+		"src"
+	],
+	"scripts": {
+		"test": "TZ=Europe/London node --test \"test/**/*.test.js\"",
+		"demo": "node demo/build.mjs --serve",
+		"demo:build": "node demo/build.mjs",
+		"clean": "find . -name '._*' -type f -delete"
+	},
+	"peerDependencies": {
+		"react": ">=18",
+		"react-dom": ">=18"
+	},
+	"devDependencies": {
+		"esbuild": "^0.25.0"
+	},
+	"engines": {
+		"node": ">=20"
+	}
+}
