@@ -8,7 +8,7 @@ around 2,700 lines of JavaScript and 740 of CSS, comments included, which is
 few enough to read end to end before you trust it.
 
 ```
-npm install github:dzined/dzined-ui#v0.1.3
+npm install github:dzined/dzined-ui#v0.1.4
 ```
 
 ```jsx
@@ -30,7 +30,7 @@ transpilePackages: ["@dzined/ui"],
 **Pin a tag, never a branch.** A branch pin means a push here silently changes
 what a deployed site is running, which is the whole thing a pin is for.
 
-**Use `v0.1.3`.** The three before it are superseded, and a git tag cannot carry a
+**Use `v0.1.4`.** The four before it are superseded, and a git tag cannot carry a
 warning of its own, so it has to live here:
 
 | tag | commit | do not use, because |
@@ -38,7 +38,8 @@ warning of its own, so it has to live here:
 | `v0.1.0` | `6e962bd` | Dark mode fills the selected day with a teal that the range highlight also uses at low alpha, so the whole calendar goes monochrome. Fixed in `v0.1.1`. |
 | `v0.1.1` | `f06da31` | The colours are right, but `package.json` still says `0.1.0`, so this tag and `v0.1.0` are indistinguishable to `npm ls` and in a lockfile's `version` field. Fixed in `v0.1.2`. |
 | `v0.1.2` | `827241d` | No `DzDateRangePicker`. The range *calendar* is in every version; the two-input range field is not. Added in `v0.1.3`. |
-| `v0.1.3` | `86576d5` | Current. |
+| `v0.1.3` | `86576d5` | `format` takes only a function, so a token string or an `Intl` options bag is ignored and the field silently shows the locale default. Added in `v0.1.4`. |
+| `v0.1.4` | see below | Current. |
 
 No tag has ever been moved, deliberately: anything already installed against an
 old one keeps resolving to the commit it resolved to. That is also why the first
@@ -59,6 +60,7 @@ points at have different hashes. Every tag here is annotated except `v0.1.1`:
 | `v0.1.1` | not annotated | `f06da31` |
 | `v0.1.2` | `cf7bbd15` | `827241d` |
 | `v0.1.3` | `8459380` | `86576d5` |
+| `v0.1.4` | see below | see below |
 
 `git ls-remote --tags` and the GitHub refs API print the **tag object**, so a
 correct lockfile looks wrong when checked against them.
