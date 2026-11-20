@@ -17,16 +17,22 @@ import { addDays, toISODate, today } from "../src/core/dates.js";
 
 /*
  * The comparison is only fair if MUI is given the same palette, so this theme
- * carries the portal's real primary.main and shape.borderRadius out of
- * work/src/theme/lightTheme.js. Everything else is MUI's default, which is the
- * point: the question is whether ours looks as finished as theirs, not whether
- * the portal's theme flatters one of them.
+ * carries the portal's shape.borderRadius and the same accent the library
+ * itself uses. Everything else is MUI's default, which is the point: the
+ * question is whether ours looks as finished as theirs, not whether the
+ * palette flatters one of them.
+ *
+ * In light mode that accent is primary.main straight out of lightTheme.js. In
+ * dark mode it is cloud.sidebarAccent rather than darkTheme's primary.main,
+ * because the library deviates there on purpose: see the note on --dz-accent
+ * in src/styles/dzined-ui.css. Handing MUI the teal while ours is blue would
+ * turn the dark comparison back into a comparison of two palettes.
  */
 function muiTheme(mode) {
 	return createTheme({
 		palette: {
 			mode,
-			primary: { main: mode === "dark" ? "#18CDC7" : "#1642A5" },
+			primary: { main: mode === "dark" ? "#7C93FF" : "#1642A5" },
 			...(mode === "dark"
 				? { background: { paper: "#12214A", default: "#090F25" } }
 				: {}),
@@ -300,7 +306,7 @@ function App() {
 
 				<Section
 					title="Next to MUI's"
-					note="MUI is given the portal's primary colour and 2px corner radius so the comparison is about the components, not the palette. MUI's own defaults do the rest."
+					note="MUI is given the same accent and the portal's 2px corner radius, so the comparison is about the components and not the palette. MUI's own defaults do the rest. In dark mode that accent is the portal's sidebar blue rather than its teal primary.main, which is a deviation the library makes on purpose."
 				>
 					<SideBySide mode={mode} />
 				</Section>

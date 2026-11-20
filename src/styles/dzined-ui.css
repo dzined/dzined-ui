@@ -111,14 +111,38 @@
 	--dz-text-muted: rgba(255, 255, 255, 0.58);
 	--dz-text-disabled: rgba(255, 255, 255, 0.26);
 
-	--dz-accent: #18cdc7;
-	--dz-accent-hover: #0e908b;
-	--dz-accent-active: #0d7c77;
+	/*
+	 * Blue, not the logo teal.
+	 *
+	 * primary.main is #18CDC7 in dark mode, and a selected day filled with it
+	 * jumped forward off the navy like a different product; the range band is
+	 * the same hue at low alpha, so the whole calendar went monochrome teal.
+	 * The portal's own dark chrome does not mark things with the teal either:
+	 * the dark rail uses cloud.sidebarAccent (#7C93FF) for its accent and for
+	 * whatever is selected. Using that keeps the picker inside the house navy,
+	 * and it means light and dark are both blue rather than switching hue when
+	 * you flip the theme.
+	 *
+	 * The hover and active steps are tints of #7C93FF rather than palette
+	 * tokens, because the dark palette has no lighter or darker sibling for it.
+	 * They go lighter on hover and only slightly darker on press, so the dark
+	 * contrast text stays readable throughout; the blues that are tokens
+	 * (cloud.buttonMain #415cba, cloud.mainHover #10317E) are dark enough that
+	 * the label would have to flip to white halfway through an interaction.
+	 */
+	--dz-accent: #7c93ff;
+	--dz-accent-hover: #93a6ff;
+	--dz-accent-active: #6a80e8;
 	--dz-accent-contrast: #0a1739;
-	--dz-accent-wash: rgba(24, 205, 199, 0.16);
-	--dz-accent-wash-soft: rgba(24, 205, 199, 0.08);
+	--dz-accent-wash: rgba(124, 147, 255, 0.18);
+	--dz-accent-wash-soft: rgba(124, 147, 255, 0.09);
 
-	--dz-today: #7c93ff;
+	/*
+	 * Today keeps primary.main. It is only ever a one-pixel ring, never a fill,
+	 * so the teal reads as a quiet marker instead of shouting, and it cannot be
+	 * mistaken for the blue of a selected day.
+	 */
+	--dz-today: #18cdc7;
 	--dz-danger: #ea3368;
 
 	--dz-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -136,13 +160,13 @@
 		--dz-text-strong: #ffffff;
 		--dz-text-muted: rgba(255, 255, 255, 0.58);
 		--dz-text-disabled: rgba(255, 255, 255, 0.26);
-		--dz-accent: #18cdc7;
-		--dz-accent-hover: #0e908b;
-		--dz-accent-active: #0d7c77;
+		--dz-accent: #7c93ff;
+		--dz-accent-hover: #93a6ff;
+		--dz-accent-active: #6a80e8;
 		--dz-accent-contrast: #0a1739;
-		--dz-accent-wash: rgba(24, 205, 199, 0.16);
-		--dz-accent-wash-soft: rgba(24, 205, 199, 0.08);
-		--dz-today: #7c93ff;
+		--dz-accent-wash: rgba(124, 147, 255, 0.18);
+		--dz-accent-wash-soft: rgba(124, 147, 255, 0.09);
+		--dz-today: #18cdc7;
 		--dz-danger: #ea3368;
 		--dz-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
 	}

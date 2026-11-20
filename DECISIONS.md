@@ -85,7 +85,15 @@ Three reasons, two of them scars:
   stylesheet and a handful of properties works everywhere.
 
 The defaults are the portal's real values, read out of
-`work/src/theme/lightTheme.js` and `work/src/theme/darkTheme.js`. Dark mode is
+`work/src/theme/lightTheme.js` and `work/src/theme/darkTheme.js`, with one
+deliberate deviation. `primary.main` in dark mode is the logo teal `#18CDC7`,
+and a day filled with it jumps forward off the navy like a different product;
+with the range band being the same hue at low alpha, the whole calendar went
+monochrome teal. The portal's own dark chrome does not mark things with the teal
+either, it uses `cloud.sidebarAccent` `#7C93FF`, so that is what the accent is.
+Teal is kept for today's ring, where it is one pixel rather than a fill. The
+side effect is that light and dark are now both blue instead of changing hue
+when you flip the theme. Dark mode is
 opted into with `data-dz-theme="dark"` on an ancestor rather than the OS
 preference, because the portal's dark mode is a per-browser setting in
 localStorage and has to stay the thing that decides.
