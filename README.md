@@ -1,63 +1,15 @@
 # @dzined/ui
 
-Dzined's own React components. One so far: a date picker.
+A React date picker with no runtime dependencies.
 
-No runtime dependencies, no MUI, no Emotion, no date library, no licence key and
-no watermark. It works in the portal (Next.js + MUI + Emotion) and in the plain
-Next.js customer sites that have none of those.
+No date library, no CSS-in-JS, no component framework underneath it. React and
+React DOM are peer dependencies and that is the whole dependency tree. It is
+around 2,100 lines of JavaScript and 580 of CSS, comments included, which is
+few enough to read end to end before you trust it.
 
 ```
 npm install github:dzined/dzined-ui#v0.1.2
 ```
-
-**Pin a tag, never a branch.** A branch pin means a push here silently changes
-what a deployed site is running, which is the whole thing a pin is for.
-
-### Which tag
-
-**Use `v0.1.2`.** The two before it are superseded and a git tag cannot carry a
-warning of its own, so it has to live here:
-
-| tag | commit | do not use, because |
-| --- | --- | --- |
-| `v0.1.0` | `6e962bd` | Dark mode fills the selected day with the logo teal `#18cdc7`, the same hue the range highlight uses at low alpha, so the whole calendar goes monochrome teal. Fixed in `v0.1.1`. |
-| `v0.1.1` | `f06da31` | The colours are right, but `package.json` still says `0.1.0`, so this tag and `v0.1.0` are indistinguishable to `npm ls` and in a lockfile's `version` field. Fixed in `v0.1.2`. |
-| `v0.1.2` | `827241d` | Current. |
-
-None of them was moved, deliberately: anything already installed against an old
-tag keeps resolving to the commit it resolved to. That is also why there are
-three tags for what is nearly one release.
-
-**Checking an install.** The lockfile's `resolved` SHA is the pin that actually
-binds; its `version` field is only as truthful as this package's own
-`package.json`, which is exactly what went wrong between `v0.1.0` and `v0.1.1`.
-Check the SHA, not the version string.
-
-**The SHAs in the table above are commits**, which is what npm records. An
-annotated tag is a git object in its own right with its own SHA, so the tag and
-the commit it points at have *different* hashes, and `v0.1.0` and `v0.1.2` are
-both annotated:
-
-| tag | tag object | commit npm records |
-| --- | --- | --- |
-| `v0.1.0` | `1dc3541` | `6e962bd` |
-| `v0.1.1` | — (lightweight) | `f06da31` |
-| `v0.1.2` | `cf7bbd15` | `827241d` |
-
-`git ls-remote --tags` and the GitHub refs API print the **tag object**, so a
-correct lockfile looks wrong when checked against them. Two people lost time to
-this on the same afternoon, in opposite directions: one thought a good pin was
-broken, the other thought a tag had been moved. `git rev-parse <tag>^{commit}`
-settles it, as does the `^{}` line in `ls-remote` output.
-
-### It is a private repository
-
-`npm` resolves this to `git+ssh://git@github.com/dzined/dzined-ui.git`, so an
-install needs an SSH key that can read it. That works on a developer's machine
-and **fails on a CI or Netlify build**, which has no such key. Each consuming
-site needs its own Netlify deploy key added here, read-only, under Settings,
-Deploy keys. A local `npm install` succeeding is therefore not evidence that
-the site will deploy.
 
 ```jsx
 import { DzDatePicker } from "@dzined/ui";
@@ -66,27 +18,49 @@ import "@dzined/ui/styles.css";
 <DzDatePicker label="Invoice date" value={date} onChange={setDate} />;
 ```
 
-In Next.js, add it to `transpilePackages` in `next.config.js`, because the
-package ships source rather than a build:
+In Next.js, add it to `transpilePackages`, because the package ships source
+rather than a build:
 
 ```js
 transpilePackages: ["@dzined/ui"],
 ```
 
-## Why it exists
+## Versions
 
-The portal has four copies of a MUI licence package in its store:
-`@mui/x-date-pickers-pro@7.29.4` reads `@mui/x-license@7.29.1`,
-`@mui/x-data-grid-pro@6.20.4` reads a different package called
-`@mui/x-license-pro@6.10.2`, and the app declares `@mui/x-license@^8.21.0`.
-`LicenseInfo.setLicenseKey` sets a module-level singleton, so calling it from
-app code sets it on a copy neither Pro component reads, and there is a "MUI X
-Missing license key" watermark across the date range picker on
-`/lawn-kit/download` that cannot be cleared without alias-importing exact
-versions or upgrading the Pro packages onto one major.
+**Pin a tag, never a branch.** A branch pin means a push here silently changes
+what a deployed site is running, which is the whole thing a pin is for.
 
-Owning the component removes a licence, a watermark and a dependency-resolution
-trap at once. `DECISIONS.md` has the full case for how it is structured.
+**Use `v0.1.2`.** The two before it are superseded, and a git tag cannot carry a
+warning of its own, so it has to live here:
+
+| tag | commit | do not use, because |
+| --- | --- | --- |
+| `v0.1.0` | `6e962bd` | Dark mode fills the selected day with a teal that the range highlight also uses at low alpha, so the whole calendar goes monochrome. Fixed in `v0.1.1`. |
+| `v0.1.1` | `f06da31` | The colours are right, but `package.json` still says `0.1.0`, so this tag and `v0.1.0` are indistinguishable to `npm ls` and in a lockfile's `version` field. Fixed in `v0.1.2`. |
+| `v0.1.2` | `827241d` | Current. |
+
+No tag has ever been moved, deliberately: anything already installed against an
+old one keeps resolving to the commit it resolved to. That is also why there are
+three tags for what is nearly one release.
+
+**Checking an install.** The lockfile's `resolved` SHA is the pin that actually
+binds. Its `version` field is only as truthful as this package's own
+`package.json`, which is exactly what went wrong between `v0.1.0` and `v0.1.1`.
+
+**The SHAs above are commits**, which is what npm records. An annotated tag is a
+git object in its own right with its own SHA, so the tag and the commit it
+points at have different hashes, and `v0.1.0` and `v0.1.2` are both annotated:
+
+| tag | tag object | commit npm records |
+| --- | --- | --- |
+| `v0.1.0` | `1dc3541` | `6e962bd` |
+| `v0.1.1` | not annotated | `f06da31` |
+| `v0.1.2` | `cf7bbd15` | `827241d` |
+
+`git ls-remote --tags` and the GitHub refs API print the **tag object**, so a
+correct lockfile looks wrong when checked against them.
+`git rev-parse <tag>^{commit}` settles it, as does the `^{}` line in
+`ls-remote` output.
 
 ## What is in it
 
@@ -174,8 +148,8 @@ response.
 
 ## Theming
 
-Everything visual is a `--dz-*` custom property, defaulting to the portal's real
-palette. There is no theme object and no `sx`.
+Everything visual is a `--dz-*` custom property. There is no theme object and no
+style prop.
 
 ```css
 .my-app {
@@ -187,14 +161,14 @@ palette. There is no theme object and no `sx`.
 ```
 
 Dark mode is `data-dz-theme="dark"` on any ancestor, or `"auto"` to follow the
-OS. The portal's dark mode is a per-browser localStorage setting, so it has to
-be the thing that decides, not `prefers-color-scheme`.
+operating system. An explicit attribute rather than `prefers-color-scheme` alone,
+because an application that lets someone choose a theme needs that choice to win
+over the OS setting.
 
 The tokens and their light and dark defaults are at the top of
-`src/styles/dzined-ui.css`, each annotated with the portal palette key it came
-from. **Do not declare a `--dz-*` token on an element that also renders a
-component**: it will beat the value inherited from the theme scope. Tokens go on
-`:root` or on a theme wrapper.
+`src/styles/dzined-ui.css`. **Do not declare a `--dz-*` token on an element that
+also renders a component**: it will beat the value inherited from the theme
+scope. Tokens go on `:root` or on a theme wrapper.
 
 ## Running it
 
@@ -204,15 +178,8 @@ npm test             # 133 tests, no dependencies
 npm run demo         # http://127.0.0.1:5181
 ```
 
-The demo shows the picker in every state, the same screen next to MUI's
-equivalent, the two-month range calendar laid out the way the lawn estimates
-export screen needs it, and a light/dark toggle.
-
-It borrows React, MUI, Emotion and dayjs from the portal's `node_modules`
-(`../dzined-cloud/work/node_modules`) rather than installing its own, because
-MAHLER is ExFAT with no hardlinks, every install copies, and the volume sits at
-94%. Set `PORTAL_MODULES` if your checkout is elsewhere. The library itself has
-no such dependency.
+The demo shows the picker in every state, a two-month range calendar with a
+shortcuts rail, and a light and dark toggle.
 
 ## Tested, and not
 
@@ -239,12 +206,12 @@ clock-change cases are only meaningful in a zone that observes daylight saving.
 **Not tested automatically**, and verified by hand in Chromium instead:
 
 - Everything that needs a DOM: that focus actually lands on the day the keyboard
-  reducer names, that the popover closes and returns focus, that the portal
-  positions and flips, that typing commits. There is no jsdom and no React
-  testing library here, on purpose; adding them is the obvious next step if this
-  library grows, and the two bugs found during the browser pass (a
-  `visibility: hidden` panel refusing focus, and a focus-return race on select)
-  are precisely what those tests would have caught.
+  reducer names, that the popover closes and returns focus, that it positions and
+  flips, that typing commits. There is no jsdom and no React testing library
+  here, on purpose; adding them is the obvious next step if this library grows,
+  and the two bugs found during the browser pass (a `visibility: hidden` panel
+  refusing focus, and a focus-return race on select) are precisely what those
+  tests would have caught.
 - **Any screen reader.** The ARIA is written to the grid pattern and the roles
   and names are right in the accessibility tree, but nobody has listened to it
   with VoiceOver or NVDA. That is the biggest outstanding gap.
@@ -254,46 +221,24 @@ clock-change cases are only meaningful in a zone that observes daylight saving.
 - **Browsers other than Chromium.** No Safari, no Firefox.
 - **RTL.** The grid would need its range fill mirrored.
 
-## Where it falls short of MUI's
+## What it does not do
 
-Honestly, after putting them side by side:
+Worth knowing before you choose it over something larger:
 
-- **No time picker, no date-time, no range picker component.** MUI has all
-  three. The range *calendar* is here; the range *field* is not.
-- **No form library integration.** MUI X has first-class Formik and
-  react-hook-form stories. This is an uncontrolled-or-controlled input, which is
-  enough, but there is no helper.
-- **Month and year pickers are a plain shortlist**, where MUI's year view is a
-  nicer scrolling column with better keyboard handling. Ours scrolls the current
-  year into view and no more.
-- **No slot system.** MUI lets you replace any internal part. Here you get
-  custom properties, a `footer`, and the source.
-- **No validation API.** MUI surfaces a typed `onError` with reasons like
-  `minDate` and `shouldDisableDate`. Ours shows a message in the field and
-  nothing programmatic.
+- **No time picker, no date-time, and no range field.** The range calendar is
+  here; a two-input range control with its own parsing is not.
+- **No form library integration.** It is a controlled or uncontrolled input,
+  which is enough to use with any of them, but there is no dedicated helper.
+- **Month and year pickers are a plain shortlist.** The year view scrolls the
+  current year into view and no more.
+- **No slot system.** You get custom properties, a `footer`, and the source.
+- **No programmatic validation API.** Invalid input shows a message in the
+  field; there is no typed error callback with reasons.
 - **One date library's worth of edge cases is missing.** No non-Gregorian
   calendars, no locale-aware week numbering, no `Temporal`.
 
-Where it is better: it is 2,100 lines of JavaScript and 580 of CSS, comments included, that you can read end to end, it has no
-dependencies, it cannot acquire a licence watermark, its keyboard logic is a
-pure function with tests, and it looks like Axle without being told to.
+## Licence
 
-## Working on this repo
-
-MAHLER is ExFAT, which means:
-
-- Filenames are case-insensitive. `Foo.js` silently overwrites `foo.js`.
-- `git rebase` needs `-c core.checkStat=minimal` or it reports local changes on
-  a clean tree. The repo is configured with it.
-- macOS leaves `._*` sidecars everywhere. `npm run clean` deletes them; they are
-  gitignored.
-- There are no hardlinks, so installs copy. Keep the dependency count at one.
-
-`.npmrc` sets `legacy-peer-deps=true`. npm 7+ otherwise auto-installs the React
-peer dependency into this repo, and the demo bundle then picks it up alongside
-the portal's copy: two React instances, "Invalid hook call", blank page.
-
-## Not wired in yet
-
-Nothing imports this. Putting it into the portal, and whether it replaces the
-range picker on `/lawn-kit/download`, is a separate decision.
+UNLICENSED. Public so that builds can install it without credentials, not as an
+invitation to depend on it. There is no support and no compatibility promise
+between versions.
