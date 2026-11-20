@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { makeDay, toISODate } from "../src/core/dates.js";
 import {
 	isSelectableDay,
+	pickRangeDay,
 	rangeSelection,
 	singleSelection,
 } from "../src/core/selection.js";
@@ -182,5 +183,97 @@ describe("isSelectableDay", () => {
 	it("accepts anything with no constraints", () => {
 		assert.equal(isSelectableDay(d(20), {}), true);
 		assert.equal(isSelectableDay(d(20)), true);
+	});
+});
+
+describe("pickRangeDay: a click when two fields are on screen", () => {
+	const show = (r) => [pair(r.value), r.complete, r.next];
+
+	it("sets the start and hands over to the end field", () => {
+		assert.deepEqual(show(pickRangeDay([null, null], d(10), "start")), [
+			["2026-11-10", null],
+			false,
+			"end",
+		]);
+	});
+
+	it("then the second click completes the range", () => {
+		assert.deepEqual(show(pickRangeDay([d(10), null], d(20), "end")), [
+			["2026-11-10", "2026-11-20"],
+			true,
+			"end",
+		]);
+	});
+
+	it("editing the start keeps an end that still makes sense", () => {
+		// The whole reason this function exists: clicking into one box and
+		// picking a day must not throw the other end away.
+		assert.deepEqual(show(pickRangeDay([d(5), d(20)], d(10), "start")), [
+			["2026-11-10", "2026-11-20"],
+			true,
+			"end",
+		]);
+	});
+
+	it("editing the end keeps the start", () => {
+		assert.deepEqual(show(pickRangeDay([d(5), d(20)], d(25), "end")), [
+			["2026-11-05", "2026-11-25"],
+			true,
+			"end",
+		]);
+	});
+
+	it("a start on the same day as the end is a one-day range", () => {
+		assert.deepEqual(show(pickRangeDay([d(5), d(20)], d(20), "start")), [
+			["2026-11-20", "2026-11-20"],
+			true,
+			"end",
+		]);
+	});
+
+	it("an end on the same day as the start is a one-day range", () => {
+		assert.deepEqual(show(pickRangeDay([d(20), null], d(20), "end")), [
+			["2026-11-20", "2026-11-20"],
+			true,
+			"end",
+		]);
+	});
+
+	it("a start after the end starts a fresh range rather than swapping", () => {
+		// The bare calendar swaps, because there the two clicks are one gesture.
+		// Here the user said which end they were editing, so reinterpreting the
+		// click as the other end would be the component arguing with them.
+		assert.deepEqual(show(pickRangeDay([d(5), d(20)], d(25), "start")), [
+			["2026-11-25", null],
+			false,
+			"end",
+		]);
+	});
+
+	it("an end before the start starts a fresh range too", () => {
+		assert.deepEqual(show(pickRangeDay([d(10), null], d(5), "end")), [
+			["2026-11-05", null],
+			false,
+			"end",
+		]);
+	});
+
+	it("defaults to editing the start", () => {
+		assert.deepEqual(pair(pickRangeDay([null, null], d(10)).value), [
+			"2026-11-10",
+			null,
+		]);
+	});
+
+	it("normalises whatever the caller held", () => {
+		const r = pickRangeDay(["2026-11-05", "2026-11-20"], d(10), "start");
+		assert.deepEqual(pair(r.value), ["2026-11-10", "2026-11-20"]);
+	});
+
+	it("copes with a null value", () => {
+		assert.deepEqual(pair(pickRangeDay(null, d(10), "end").value), [
+			"2026-11-10",
+			null,
+		]);
 	});
 });

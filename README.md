@@ -1,10 +1,10 @@
 # @dzined/ui
 
-A React date picker with no runtime dependencies.
+A React date picker and date-range picker with no runtime dependencies.
 
 No date library, no CSS-in-JS, no component framework underneath it. React and
 React DOM are peer dependencies and that is the whole dependency tree. It is
-around 2,100 lines of JavaScript and 580 of CSS, comments included, which is
+around 2,700 lines of JavaScript and 740 of CSS, comments included, which is
 few enough to read end to end before you trust it.
 
 ```
@@ -67,6 +67,7 @@ correct lockfile looks wrong when checked against them.
 | Export | What it is |
 | --- | --- |
 | `DzDatePicker` | A text field with a calendar popover. Single date. |
+| `DzDateRangePicker` | Two text fields over one calendar, with optional shortcuts. |
 | `DzCalendar` | The month grid on its own. `mode="single"` or `"range"`, one or more months. |
 | `src/core/*` | The date logic with no React in it: arithmetic, grid building, the keyboard map, selection models, formatting and parsing. Importable as `@dzined/ui/core`. |
 
@@ -88,6 +89,54 @@ correct lockfile looks wrong when checked against them.
 | `openOnFocus` | `false` | |
 | `fullWidth` | `false` | |
 | `calendarProps` | `{}` | Passed to the `DzCalendar` inside. |
+
+### `DzDateRangePicker`
+
+The same props as `DzDatePicker` for bounds, locale, format, disabling and
+clearing, with the value as `[start, end]` and these in addition:
+
+| Prop | Default | Notes |
+| --- | --- | --- |
+| `value` / `defaultValue` | `[null, null]` | Either end may be `null`. |
+| `onChange(range, meta)` | | `meta.source` is `"input"`, `"calendar"`, `"shortcut"` or `"clear"`; `meta.complete` says whether both ends are now set. |
+| `calendars` | `2` | Months side by side. Drop to `1` in a narrow column. |
+| `shortcuts` | `null` | `[{ label, getValue: () => [start, end] }]`, rendered as a rail down the left of the panel. The one matching the current value is marked pressed. |
+| `startLabel` / `endLabel` | `"From"` / `"To"` | Accessible names for the two inputs. |
+| `separator` | `"to"` | The text between them. Hidden from screen readers, which get the labels instead. |
+| `startInputProps` / `endInputProps` | `{}` | Spread onto each input. |
+
+```jsx
+import { DzDateRangePicker } from "@dzined/ui";
+
+const [range, setRange] = useState([null, null]);
+
+<DzDateRangePicker
+	label="Export date range"
+	value={range}
+	onChange={setRange}
+	shortcuts={[
+		{ label: "Last 7 days", getValue: () => [addDays(today(), -7), today()] },
+		{ label: "Last 30 days", getValue: () => [addDays(today(), -30), today()] },
+	]}
+/>;
+```
+
+**Which end a click lands on** is decided by which of the two inputs you were
+last in, and the active half is tinted to say so. That is what lets you change
+one end of a finished range without starting over: click into `To` on a
+complete range, pick a day, and the start stays put. On an empty field the
+familiar two-click flow still works, because picking a start hands the active
+end over automatically.
+
+Picking a day keeps the focus in the grid rather than jumping to the other
+input, so <kbd>Enter</kbd>, <kbd>Enter</kbd> picks a whole range from the
+keyboard. The panel stays open until both ends are set.
+
+**A range is never reordered behind you.** A click or a typed date that would
+put the start after the end begins a new range from that day, and typing one is
+refused with a message rather than quietly swapped. The bare calendar does swap,
+because there the two clicks are one gesture and their order is incidental; in a
+field you have said which end you meant.
 
 ### `DzCalendar`
 
@@ -174,11 +223,11 @@ scope. Tokens go on `:root` or on a theme wrapper.
 
 ```bash
 npm install          # esbuild, nothing else
-npm test             # 133 tests, no dependencies
+npm test             # 144 tests, no dependencies
 npm run demo         # http://127.0.0.1:5181
 ```
 
-The demo shows the picker in every state, a two-month range calendar with a
+The demo shows both pickers in every state, a two-month range calendar with a
 shortcuts rail, and a light and dark toggle.
 
 ## Tested, and not
@@ -196,6 +245,9 @@ shortcuts rail, and a light and dark toggle.
   `null` for keys we do not own so the browser keeps Tab.
 - **Both selection models**, including the range swap when the second click is
   earlier than the first, restarting a completed range, and the hover preview.
+- **What a click means in the range field**, which is a different rule from the
+  bare calendar: editing either end keeps the other, and a click that would
+  invert the range starts a fresh one instead of swapping.
 - **Parsing**: every accepted shape above, both field orders, the year pivot,
   rejection of impossible dates, and a round-trip of the formatter's own output
   in four locales.
@@ -207,7 +259,7 @@ clock-change cases are only meaningful in a zone that observes daylight saving.
 
 - Everything that needs a DOM: that focus actually lands on the day the keyboard
   reducer names, that the popover closes and returns focus, that it positions and
-  flips, that typing commits. There is no jsdom and no React testing library
+  flips, that typing commits, and that the range field tracks the active end. There is no jsdom and no React testing library
   here, on purpose; adding them is the obvious next step if this library grows,
   and the two bugs found during the browser pass (a `visibility: hidden` panel
   refusing focus, and a focus-return race on select) are precisely what those
@@ -225,8 +277,10 @@ clock-change cases are only meaningful in a zone that observes daylight saving.
 
 Worth knowing before you choose it over something larger:
 
-- **No time picker, no date-time, and no range field.** The range calendar is
-  here; a two-input range control with its own parsing is not.
+- **No time picker and no date-time.** Dates only; the value is always a `Date`
+  at local midnight.
+- **No minimum or maximum range length.** `min` and `max` bound the individual
+  dates, but nothing enforces "at least two nights".
 - **No form library integration.** It is a controlled or uncontrolled input,
   which is enough to use with any of them, but there is no dedicated helper.
 - **Month and year pickers are a plain shortlist.** The year view scrolls the

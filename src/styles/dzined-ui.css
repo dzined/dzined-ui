@@ -354,8 +354,15 @@
 	box-shadow: var(--dz-shadow);
 }
 
+/*
+ * `flat` is for a calendar sitting inside something that already has a surface,
+ * which is what the range popover does: it draws one panel around a shortcuts
+ * rail and the calendar. Leaving the border on gave a box inside a box with a
+ * double hairline down the join.
+ */
 .dz-calendar[data-flat="true"] {
-	border-radius: var(--dz-radius);
+	border: 0;
+	border-radius: 0;
 	box-shadow: none;
 }
 
@@ -601,4 +608,135 @@
 .dz-text-button:disabled {
 	color: var(--dz-text-disabled);
 	cursor: default;
+}
+
+/* ------------------------------------------------------- range field + panel */
+
+/*
+ * Two inputs inside one shell, not two shells side by side.
+ *
+ * A range is one value, and drawing it as one control is what makes the focus
+ * ring, the hover border and the invalid state apply to the thing the user
+ * thinks they are editing. The separator is a real element rather than a border
+ * on the second input, so it can be dimmed with the rest of the control when
+ * the field is disabled.
+ */
+.dz-range-shell {
+	gap: 0;
+}
+
+.dz-range-input {
+	flex: 1 1 0;
+	min-width: 6.5ch;
+}
+
+/*
+ * The active half is tinted so it is obvious which end a calendar click will
+ * land on. Without it the two-field flow is guesswork: you click a day and
+ * find out afterwards which box it went into.
+ */
+.dz-range-input[data-active="true"] {
+	background: var(--dz-accent-wash-soft);
+	border-radius: var(--dz-radius);
+}
+
+.dz-range-separator {
+	flex: 0 0 auto;
+	padding: 0 6px;
+	color: var(--dz-text-muted);
+	user-select: none;
+}
+
+.dz-range-panel {
+	display: flex;
+	align-items: stretch;
+	background: var(--dz-surface);
+	border: 1px solid var(--dz-border);
+	border-radius: var(--dz-radius);
+	box-shadow: var(--dz-shadow);
+	overflow: hidden;
+}
+
+.dz-range-shortcuts {
+	display: flex;
+	flex: 0 0 auto;
+	flex-direction: column;
+	gap: 2px;
+	padding: 10px 8px;
+	border-right: 1px solid var(--dz-border);
+	/*
+	 * The rail is as tall as the calendar beside it and scrolls on its own when
+	 * a consumer passes more shortcuts than fit, rather than stretching the
+	 * panel past the bottom of the viewport.
+	 */
+	max-height: 360px;
+	overflow-y: auto;
+}
+
+.dz-range-shortcut {
+	padding: 7px 12px;
+	font: inherit;
+	font-size: 13px;
+	text-align: left;
+	white-space: nowrap;
+	color: var(--dz-text);
+	background: none;
+	border: 0;
+	border-radius: var(--dz-radius);
+	cursor: pointer;
+}
+
+.dz-range-shortcut:hover {
+	background: var(--dz-surface-hover);
+	color: var(--dz-text-strong);
+}
+
+.dz-range-shortcut:focus-visible {
+	outline: none;
+	box-shadow: var(--dz-focus-ring);
+}
+
+.dz-range-shortcut[aria-pressed="true"] {
+	color: var(--dz-accent);
+	background: var(--dz-accent-wash);
+	font-weight: 600;
+}
+
+.dz-range-body {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.dz-range-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 8px 12px;
+	border-top: 1px solid var(--dz-border);
+}
+
+.dz-range-summary {
+	font-size: 12px;
+	color: var(--dz-text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Below the width of two months the panel stacks: the rail goes on top as a
+ * scrolling row, and the consumer is expected to drop to calendars={1}.
+ */
+@media (max-width: 620px) {
+	.dz-range-panel {
+		flex-direction: column;
+	}
+
+	.dz-range-shortcuts {
+		flex-direction: row;
+		max-height: none;
+		overflow-x: auto;
+		border-right: 0;
+		border-bottom: 1px solid var(--dz-border);
+	}
 }

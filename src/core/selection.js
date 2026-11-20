@@ -117,6 +117,49 @@ export const rangeSelection = {
 };
 
 /**
+ * What clicking a day does when two fields are on screen, one per end.
+ *
+ * `rangeSelection.select` is the right model for a bare calendar, where the
+ * only state is "how many clicks have happened". A range *field* has more to go
+ * on than that: the user put their cursor in one of two inputs first, and that
+ * says which end they meant. Ignoring it produces the thing every clumsy range
+ * picker does, where clicking into the end box and picking a day throws the
+ * start away and starts over.
+ *
+ * So the rules are:
+ *
+ *  - Editing the start keeps the end, as long as the new start is not after it.
+ *    Changing only the start of a range is an ordinary thing to want.
+ *  - Editing the end keeps the start, as long as the new end is not before it.
+ *  - A click that would invert the range starts a fresh one from that day,
+ *    rather than silently swapping the two. Swapping is right in a bare
+ *    calendar, where the two clicks are one gesture and order is incidental;
+ *    here the user has said which end they are editing, so reinterpreting it as
+ *    the other end is not helpful, it is the component arguing.
+ *
+ * `next` is the field that should become active afterwards, which is what makes
+ * the plain two-click flow work: click a start, the end field takes over, click
+ * again, done.
+ *
+ * @returns {{value: [Date|null, Date|null], complete: boolean, next: "start"|"end"}}
+ */
+export function pickRangeDay(value, day, activeField = "start") {
+	const [start, end] = rangeSelection.normalise(value);
+
+	if (activeField === "start") {
+		if (end && compareDay(day, end) <= 0) {
+			return { value: [day, end], complete: true, next: "end" };
+		}
+		return { value: [day, null], complete: false, next: "end" };
+	}
+
+	if (start && compareDay(day, start) >= 0) {
+		return { value: [start, day], complete: true, next: "end" };
+	}
+	return { value: [day, null], complete: false, next: "end" };
+}
+
+/**
  * Is a value legal given the bounds and the disabled-day predicate?
  *
  * Used to decide whether typed input should be accepted, not to decide whether

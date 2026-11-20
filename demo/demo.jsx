@@ -12,7 +12,7 @@ import dayjs from "dayjs";
 // The library's one stylesheet, imported the way a consumer would import it.
 // esbuild emits it beside the bundle as dist/demo.css.
 import "../src/styles/dzined-ui.css";
-import { DzCalendar, DzDatePicker } from "../src/index.js";
+import { DzCalendar, DzDatePicker, DzDateRangePicker } from "../src/index.js";
 import { addDays, toISODate, today } from "../src/core/dates.js";
 
 /*
@@ -227,6 +227,88 @@ function RangePreview() {
 	);
 }
 
+/*
+ * The range field: two inputs and one calendar.
+ *
+ * The thing to try here is clicking into the "To" box on a finished range and
+ * picking a day. The start stays where it is. Clicking into "From" and picking
+ * keeps the end. That is the whole reason this is not just DzCalendar with a
+ * text box bolted on.
+ */
+function RangeField() {
+	const [stay, setStay] = useState([null, null]);
+	const [report, setReport] = useState([addDays(today(), -30), today()]);
+	const [log, setLog] = useState([]);
+
+	const push = (line) =>
+		setLog((prev) => [`${new Date().toLocaleTimeString("en-GB")}  ${line}`, ...prev].slice(0, 6));
+
+	const shortcuts = useMemo(
+		() => [
+			{ label: "This week", getValue: () => weekOf(today()) },
+			{ label: "Last 7 days", getValue: () => [addDays(today(), -7), today()] },
+			{ label: "This month", getValue: () => monthOf(today()) },
+			{ label: "Last 30 days", getValue: () => [addDays(today(), -30), today()] },
+			{ label: "Last 90 days", getValue: () => [addDays(today(), -90), today()] },
+		],
+		[]
+	);
+
+	const show = (v) =>
+		`[${v.map((x) => (x ? toISODate(x) : "null")).join(", ")}]`;
+
+	return (
+		<div className="row">
+			<div className="col">
+				<span className="tag">With shortcuts</span>
+				<DzDateRangePicker
+					label="Export date range"
+					value={report}
+					onChange={(next, meta) => {
+						setReport(next);
+						push(`${show(next)} (${meta?.source})`);
+					}}
+					shortcuts={shortcuts}
+				/>
+				<Readout label="range" value={report} />
+			</div>
+
+			<div className="col">
+				<span className="tag">Bounded, one month</span>
+				<DzDateRangePicker
+					label="Stay"
+					value={stay}
+					onChange={setStay}
+					min={today()}
+					max={addDays(today(), 180)}
+					calendars={1}
+					separator="→"
+					startLabel="Arrive"
+					endLabel="Depart"
+					message="Next 180 days"
+				/>
+				<Readout label="stay" value={stay} />
+			</div>
+
+			<div className="col">
+				<span className="tag">Disabled</span>
+				<DzDateRangePicker
+					label="Locked"
+					defaultValue={[addDays(today(), -7), today()]}
+					disabled
+				/>
+			</div>
+
+			<div className="col" style={{ flex: "1 1 240px" }}>
+				<span className="tag">onChange log</span>
+				<div className="readout" style={{ minHeight: 110 }}>
+					{log.length ? log.join("\n") : "nothing yet"}
+				</div>
+			</div>
+		</div>
+	);
+}
+
 function weekOf(d) {
 	const start = addDays(d, -((d.getDay() + 6) % 7));
 	return [start, addDays(start, 6)];
@@ -309,6 +391,13 @@ function App() {
 					note="MUI is given the same accent and the portal's 2px corner radius, so the comparison is about the components and not the palette. MUI's own defaults do the rest. In dark mode that accent is the portal's sidebar blue rather than its teal primary.main, which is a deviation the library makes on purpose."
 				>
 					<SideBySide mode={mode} />
+				</Section>
+
+				<Section
+					title="The range field"
+					note="Two inputs over one calendar. The tinted half says which end the next click lands on, and clicking into either box takes it over, so you can edit one end of a finished range without starting again. Typing a start after the end is refused rather than quietly reordered."
+				>
+					<RangeField />
 				</Section>
 
 				<Section
