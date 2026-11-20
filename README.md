@@ -39,7 +39,7 @@ warning of its own, so it has to live here:
 | `v0.1.1` | `f06da31` | The colours are right, but `package.json` still says `0.1.0`, so this tag and `v0.1.0` are indistinguishable to `npm ls` and in a lockfile's `version` field. Fixed in `v0.1.2`. |
 | `v0.1.2` | `827241d` | No `DzDateRangePicker`. The range *calendar* is in every version; the two-input range field is not. Added in `v0.1.3`. |
 | `v0.1.3` | `86576d5` | `format` takes only a function, so a token string or an `Intl` options bag is ignored and the field silently shows the locale default. Added in `v0.1.4`. |
-| `v0.1.4` | see below | Current. |
+| `v0.1.4` | `d29656d` | Current. |
 
 No tag has ever been moved, deliberately: anything already installed against an
 old one keeps resolving to the commit it resolved to. That is also why the first
@@ -60,7 +60,7 @@ points at have different hashes. Every tag here is annotated except `v0.1.1`:
 | `v0.1.1` | not annotated | `f06da31` |
 | `v0.1.2` | `cf7bbd15` | `827241d` |
 | `v0.1.3` | `8459380` | `86576d5` |
-| `v0.1.4` | see below | see below |
+| `v0.1.4` | `5912ab4` | `d29656d` |
 
 `git ls-remote --tags` and the GitHub refs API print the **tag object**, so a
 correct lockfile looks wrong when checked against them.
