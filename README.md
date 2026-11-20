@@ -38,11 +38,12 @@ warning of its own, so it has to live here:
 | `v0.1.0` | `6e962bd` | Dark mode fills the selected day with a teal that the range highlight also uses at low alpha, so the whole calendar goes monochrome. Fixed in `v0.1.1`. |
 | `v0.1.1` | `f06da31` | The colours are right, but `package.json` still says `0.1.0`, so this tag and `v0.1.0` are indistinguishable to `npm ls` and in a lockfile's `version` field. Fixed in `v0.1.2`. |
 | `v0.1.2` | `827241d` | No `DzDateRangePicker`. The range *calendar* is in every version; the two-input range field is not. Added in `v0.1.3`. |
-| `v0.1.3` | see below | Current. |
+| `v0.1.3` | `86576d5` | Current. |
 
 No tag has ever been moved, deliberately: anything already installed against an
-old one keeps resolving to the commit it resolved to. That is also why there are
-three tags for what is nearly one release.
+old one keeps resolving to the commit it resolved to. That is also why the first
+three tags cover what is nearly one release: each mistake got a new number
+rather than a corrected old one.
 
 **Checking an install.** The lockfile's `resolved` SHA is the pin that actually
 binds. Its `version` field is only as truthful as this package's own
@@ -50,14 +51,14 @@ binds. Its `version` field is only as truthful as this package's own
 
 **The SHAs above are commits**, which is what npm records. An annotated tag is a
 git object in its own right with its own SHA, so the tag and the commit it
-points at have different hashes, and `v0.1.0` and `v0.1.2` are both annotated:
+points at have different hashes. Every tag here is annotated except `v0.1.1`:
 
 | tag | tag object | commit npm records |
 | --- | --- | --- |
 | `v0.1.0` | `1dc3541` | `6e962bd` |
 | `v0.1.1` | not annotated | `f06da31` |
 | `v0.1.2` | `cf7bbd15` | `827241d` |
-| `v0.1.3` | see below | see below |
+| `v0.1.3` | `8459380` | `86576d5` |
 
 `git ls-remote --tags` and the GitHub refs API print the **tag object**, so a
 correct lockfile looks wrong when checked against them.
