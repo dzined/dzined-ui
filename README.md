@@ -33,6 +33,23 @@ binds; its `version` field is only as truthful as this package's own
 `package.json`, which is exactly what went wrong between `v0.1.0` and `v0.1.1`.
 Check the SHA, not the version string.
 
+**The SHAs in the table above are commits**, which is what npm records. An
+annotated tag is a git object in its own right with its own SHA, so the tag and
+the commit it points at have *different* hashes, and `v0.1.0` and `v0.1.2` are
+both annotated:
+
+| tag | tag object | commit npm records |
+| --- | --- | --- |
+| `v0.1.0` | `1dc3541` | `6e962bd` |
+| `v0.1.1` | — (lightweight) | `f06da31` |
+| `v0.1.2` | `cf7bbd15` | `827241d` |
+
+`git ls-remote --tags` and the GitHub refs API print the **tag object**, so a
+correct lockfile looks wrong when checked against them. Two people lost time to
+this on the same afternoon, in opposite directions: one thought a good pin was
+broken, the other thought a tag had been moved. `git rev-parse <tag>^{commit}`
+settles it, as does the `^{}` line in `ls-remote` output.
+
 ### It is a private repository
 
 `npm` resolves this to `git+ssh://git@github.com/dzined/dzined-ui.git`, so an
