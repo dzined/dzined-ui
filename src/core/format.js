@@ -65,9 +65,175 @@ export function fieldOrder(locale = "en-GB") {
 	return order;
 }
 
+/*
+ * The token vocabulary.
+ *
+ * A deliberately small subset of the dayjs/moment/date-fns convention, because
+ * that convention is what people already have in their fingers, even though it
+ * is a library invention rather than anything in the language. Longest
+ * alternatives come first in the pattern or `MMMM` would match as `MM` + `MM`.
+ *
+ * There are no time tokens. Every value this library handles is a `Date` at
+ * local midnight, so `HH:mm` could only ever print `00:00`, and a token that is
+ * always a lie is worse than one that is absent.
+ *
+ * `Do` (1st, 2nd) is absent too: ordinal suffixes are per-language and getting
+ * them from `Intl.PluralRules` still needs a suffix table per locale, which is
+ * exactly the locale data this library exists not to carry.
+ */
+const TOKEN_PATTERN = /\[([^\]]*)\]|YYYY|YY|MMMM|MMM|MM|M|DD|D|dddd|ddd|dd/g;
+
+const nameCache = new Map();
+
+function localeNames(locale) {
+	const key = String(locale);
+	if (nameCache.has(key)) return nameCache.get(key);
+	let months;
+	let weekdays;
+	try {
+		const longMonth = new Intl.DateTimeFormat(locale, { month: "long" });
+		const shortMonth = new Intl.DateTimeFormat(locale, { month: "short" });
+		months = Array.from({ length: 12 }, (_, m) => {
+			const d = new Date(2026, m, 1);
+			return [longMonth.format(d), shortMonth.format(d)];
+		});
+		const longDay = new Intl.DateTimeFormat(locale, { weekday: "long" });
+		const shortDay = new Intl.DateTimeFormat(locale, { weekday: "short" });
+		const narrowDay = new Intl.DateTimeFormat(locale, { weekday: "narrow" });
+		// 15 November 2026 is a Sunday, so the array indexes by getDay().
+		weekdays = Array.from({ length: 7 }, (_, i) => {
+			const d = new Date(2026, 10, 15 + i);
+			return [longDay.format(d), shortDay.format(d), narrowDay.format(d)];
+		});
+	} catch {
+		return localeNames("en-GB");
+	}
+	const value = { months, weekdays };
+	nameCache.set(key, value);
+	return value;
+}
+
+const pad = (n) => String(n).padStart(2, "0");
+
+/**
+ * Render a token pattern.
+ *
+ * Month and weekday names come out of `Intl` in the active locale, never a
+ * table in this file. That is the whole reason the library carries no locale
+ * data: `"dddd D MMMM YYYY"` under `fr-FR` has to say "vendredi 20 novembre
+ * 2026" without anybody here knowing a word of French.
+ *
+ * Anything in square brackets is passed through untouched, so `"[on] D MMM"`
+ * prints "on 20 Nov" rather than treating the "o" and "n" as tokens.
+ */
+export function formatWithTokens(date, pattern, locale = "en-GB") {
+	const { months, weekdays } = localeNames(locale);
+	const year = date.getFullYear();
+	const month = date.getMonth();
+	const dayOfMonth = date.getDate();
+	const dayOfWeek = date.getDay();
+
+	return String(pattern).replace(TOKEN_PATTERN, (match, literal) => {
+		if (literal !== undefined) return literal;
+		switch (match) {
+			case "YYYY":
+				return String(year).padStart(4, "0");
+			case "YY":
+				return pad(year % 100);
+			case "MMMM":
+				return months[month][0];
+			case "MMM":
+				return months[month][1];
+			case "MM":
+				return pad(month + 1);
+			case "M":
+				return String(month + 1);
+			case "DD":
+				return pad(dayOfMonth);
+			case "D":
+				return String(dayOfMonth);
+			case "dddd":
+				return weekdays[dayOfWeek][0];
+			case "ddd":
+				return weekdays[dayOfWeek][1];
+			case "dd":
+				return weekdays[dayOfWeek][2];
+			default:
+				return match;
+		}
+	});
+}
+
+/**
+ * Format a day, in whichever of the three shapes the caller gave us.
+ *
+ * - a **function**, for anything this does not cover, including dayjs tokens;
+ * - a **token string**, `"D MMM YYYY"`, the convention everyone knows;
+ * - an **options object**, handed straight to `Intl.DateTimeFormat`, which is
+ *   the one that is genuinely standard JavaScript and costs nothing because it
+ *   is what this function already does internally.
+ *
+ * All three are the same prop on purpose. Asking a caller to pick `formatToken`
+ * or `formatOptions` makes them learn our taxonomy before they can print a
+ * date, and the three shapes are trivially distinguishable at runtime.
+ */
+/**
+ * The field order a given `format` will actually print in.
+ *
+ * Without this, `format="DD/MM/YYYY"` under an `en-US` locale formats one way
+ * and parses the other: the field would show 20/11/2026 and refuse to read it
+ * back, because `fieldOrder("en-US")` says MDY. The format wins where it says
+ * anything, and the locale is the fallback.
+ *
+ * Returns null when the format cannot say: a function is opaque, and a pattern
+ * or options bag that omits a field has no order to speak of.
+ */
+export function fieldOrderFromFormat(format, locale = "en-GB") {
+	if (typeof format === "string") {
+		const seen = [];
+		TOKEN_PATTERN.lastIndex = 0;
+		let match = TOKEN_PATTERN.exec(format);
+		while (match) {
+			const token = match[0];
+			// Square-bracket literals and the lowercase weekday tokens carry no
+			// field order; only Y, M and uppercase D do.
+			if (token[0] === "Y" || token[0] === "M" || token[0] === "D") {
+				if (!seen.includes(token[0])) seen.push(token[0]);
+			}
+			match = TOKEN_PATTERN.exec(format);
+		}
+		return seen.length === 3 ? seen.join("") : null;
+	}
+	if (format && typeof format === "object") {
+		try {
+			const parts = new Intl.DateTimeFormat(locale, format).formatToParts(
+				new Date(2026, 10, 20)
+			);
+			const seen = parts
+				.filter((x) => x.type === "day" || x.type === "month" || x.type === "year")
+				.map((x) => x.type[0].toUpperCase());
+			return seen.length === 3 ? seen.join("") : null;
+		} catch {
+			return null;
+		}
+	}
+	return null;
+}
+
 export function formatDay(date, { locale = "en-GB", format = null } = {}) {
 	if (!isValidDate(date)) return "";
 	if (typeof format === "function") return format(date);
+	if (typeof format === "string" && format.trim() !== "") {
+		return formatWithTokens(date, format, locale);
+	}
+	if (format && typeof format === "object") {
+		try {
+			return new Intl.DateTimeFormat(locale, format).format(date);
+		} catch {
+			// An invalid options bag throws. Fall through to the default rather
+			// than taking the page down over a formatting preference.
+		}
+	}
 	return new Intl.DateTimeFormat(locale, {
 		day: "2-digit",
 		month: "2-digit",
@@ -145,6 +311,43 @@ function safeDay(year, monthIndex, dayOfMonth) {
 }
 
 /**
+ * Find a month name among the words of a typed string.
+ *
+ * Exact matches are tried across every word before any prefix match, which
+ * matters in locales where a weekday abbreviation is a prefix of a month name:
+ * Spanish "mar" is both Tuesday and the start of "marzo". Taking exact hits
+ * first means "martes 20 marzo" resolves on "marzo" rather than on the
+ * weekday.
+ *
+ * English names are tried as well as the locale's, so "20 nov" works for
+ * someone typing English into a French-locale field.
+ */
+function findMonth(words, locale) {
+	const names = monthNames(locale).map(([long, short]) => [
+		long.toLowerCase(),
+		short.toLowerCase().replace(".", ""),
+	]);
+
+	for (const word of words) {
+		for (let m = 0; m < 12; m += 1) {
+			if (names[m][0] === word || names[m][1] === word) return m;
+		}
+		const english = EN_MONTHS.indexOf(word);
+		if (english >= 0) return english;
+	}
+
+	for (const word of words) {
+		for (let m = 0; m < 12; m += 1) {
+			if (names[m][0].startsWith(word) || names[m][1].startsWith(word)) return m;
+		}
+		const english = EN_MONTHS.findIndex((n) => n.startsWith(word));
+		if (english >= 0) return english;
+	}
+
+	return -1;
+}
+
+/**
  * Read a typed date, leniently.
  *
  * Accepts, in a DMY locale: `20/11/2026`, `20-11-26`, `20.11.2026`, `20/11`
@@ -159,7 +362,10 @@ function safeDay(year, monthIndex, dayOfMonth) {
  * The keywords are English only. Adding them per locale means a word list per
  * locale, and everyone typing into this estate's portals types English.
  */
-export function parseDay(text, { locale = "en-GB", reference = null } = {}) {
+export function parseDay(
+	text,
+	{ locale = "en-GB", reference = null, format = null } = {}
+) {
 	if (text == null) return null;
 	const raw = String(text).trim().toLowerCase();
 	if (!raw) return null;
@@ -175,48 +381,53 @@ export function parseDay(text, { locale = "en-GB", reference = null } = {}) {
 	const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(raw);
 	if (iso) return safeDay(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
 
-	const order = fieldOrder(locale);
+	/*
+	 * Which field order to try, and in what sequence.
+	 *
+	 * The format's own order comes first so a field round-trips what it prints,
+	 * then the locale's, so somebody typing the way they always have is still
+	 * understood. With `format="YYYY-MM-DD"` under en-GB that means `2026-11-20`
+	 * and `20/11/2026` both work, which is the point.
+	 */
+	const localeOrder = fieldOrder(locale);
+	const formatOrder = fieldOrderFromFormat(format, locale);
+	const orders = formatOrder && formatOrder !== localeOrder
+		? [formatOrder, localeOrder]
+		: [localeOrder];
+	const order = orders[0];
 
 	// A month written as a word, in any position.
-	const wordMatch = /[a-zÀ-ɏ]{3,}/.exec(raw);
-	if (wordMatch) {
-		const names = monthNames(locale);
-		const word = wordMatch[0];
-		let monthIndex = -1;
-		for (let m = 0; m < 12; m += 1) {
-			const [long, short] = names[m].map((s) => s.toLowerCase());
-			if (long === word || short.replace(".", "") === word || long.startsWith(word) && word.length >= 3) {
-				monthIndex = m;
-				break;
-			}
-		}
-		if (monthIndex < 0) {
-			// Fall back to English names, so "nov" works even under a French locale.
-			monthIndex = EN_MONTHS.findIndex(
-				(n) => n === word || (word.length >= 3 && n.startsWith(word))
-			);
-		}
-		if (monthIndex < 0) return null;
-
-		const numbers = raw.match(/\d{1,4}/g) || [];
-		if (numbers.length === 0) return null;
-		// One number: the day, in the reference year. Two: day and year, and the
-		// four-digit one is the year wherever it sits.
-		let dayOfMonth;
-		let year = base.getFullYear();
-		if (numbers.length === 1) {
-			dayOfMonth = Number(numbers[0]);
-		} else {
-			const yearAt = numbers.findIndex((n) => n.length > 2);
-			if (yearAt >= 0) {
-				year = normaliseYear(numbers[yearAt]);
-				dayOfMonth = Number(numbers[yearAt === 0 ? 1 : 0]);
-			} else {
+	const words = raw.match(/[a-zÀ-ɏ]{3,}/g) || [];
+	if (words.length) {
+		const monthIndex = findMonth(words, locale);
+		/*
+		 * Words that are not a month are not fatal. `"dddd D MMMM YYYY"` prints
+		 * "Friday 20 November 2026", and the old scan only looked at the first
+		 * word, found "friday", and gave up: the field could print a date it then
+		 * refused to read back. Anything left over is ignored, so a trailing note
+		 * on the end of a pasted date does not break it either.
+		 */
+		if (monthIndex >= 0) {
+			const numbers = raw.match(/\d{1,4}/g) || [];
+			if (numbers.length === 0) return null;
+			// One number: the day, in the reference year. Two: day and year, and the
+			// four-digit one is the year wherever it sits.
+			let dayOfMonth;
+			let year = base.getFullYear();
+			if (numbers.length === 1) {
 				dayOfMonth = Number(numbers[0]);
-				year = normaliseYear(numbers[1]);
+			} else {
+				const yearAt = numbers.findIndex((n) => n.length > 2);
+				if (yearAt >= 0) {
+					year = normaliseYear(numbers[yearAt]);
+					dayOfMonth = Number(numbers[yearAt === 0 ? 1 : 0]);
+				} else {
+					dayOfMonth = Number(numbers[0]);
+					year = normaliseYear(numbers[1]);
+				}
 			}
+			return safeDay(year, monthIndex, dayOfMonth);
 		}
-		return safeDay(year, monthIndex, dayOfMonth);
 	}
 
 	// Purely numeric from here on.
@@ -224,19 +435,21 @@ export function parseDay(text, { locale = "en-GB", reference = null } = {}) {
 
 	if (parts.length === 1 && (parts[0].length === 6 || parts[0].length === 8)) {
 		// A run of digits with no separators. `20261120` is almost certainly ISO;
-		// anything else follows the locale's field order.
+		// anything else follows the format's order, then the locale's.
 		const run = parts[0];
 		const candidates = [];
 		if (run.length === 8) {
-			candidates.push([run.slice(0, 4), run.slice(4, 6), run.slice(6, 8)].concat("YMD"));
-			candidates.push(
-				[run.slice(0, 2), run.slice(2, 4), run.slice(4, 8)].concat(order)
-			);
+			candidates.push([[run.slice(0, 4), run.slice(4, 6), run.slice(6, 8)], "YMD"]);
+			for (const o of orders) {
+				candidates.push([[run.slice(0, 2), run.slice(2, 4), run.slice(4, 8)], o]);
+			}
 		} else {
-			candidates.push([run.slice(0, 2), run.slice(2, 4), run.slice(4, 6)].concat(order));
+			for (const o of orders) {
+				candidates.push([[run.slice(0, 2), run.slice(2, 4), run.slice(4, 6)], o]);
+			}
 		}
-		for (const c of candidates) {
-			const got = fromOrderedParts([c[0], c[1], c[2]], c[3]);
+		for (const [trio, o] of candidates) {
+			const got = fromOrderedParts(trio, o);
 			if (got) return got;
 		}
 		return null;
@@ -251,25 +464,36 @@ export function parseDay(text, { locale = "en-GB", reference = null } = {}) {
 		// No year typed: use the year on screen. The alternative, refusing, makes
 		// the common case of correcting a day and month inside the current year
 		// need four extra keystrokes.
-		const iDay = order.indexOf("D") < order.indexOf("M") ? 0 : 1;
-		const dayOfMonth = Number(parts[iDay]);
-		const monthIndex = Number(parts[1 - iDay]) - 1;
-		return safeDay(base.getFullYear(), monthIndex, dayOfMonth);
+		for (const o of orders) {
+			const iDay = o.indexOf("D") < o.indexOf("M") ? 0 : 1;
+			const got = safeDay(
+				base.getFullYear(),
+				Number(parts[1 - iDay]) - 1,
+				Number(parts[iDay])
+			);
+			if (got) return got;
+		}
+		return null;
 	}
 
 	if (parts.length === 3) {
-		// A four-digit field is the year wherever the locale would have put it.
-		const yearAt = parts.findIndex((p) => p.length === 4);
-		if (yearAt >= 0 && order.indexOf("Y") !== yearAt) {
-			const rest = parts.filter((_, i) => i !== yearAt);
-			const dayFirst = order.indexOf("D") < order.indexOf("M");
-			return safeDay(
-				normaliseYear(parts[yearAt]),
-				Number(rest[dayFirst ? 1 : 0]) - 1,
-				Number(rest[dayFirst ? 0 : 1])
-			);
+		for (const o of orders) {
+			// A four-digit field is the year wherever this order would have put it.
+			const yearAt = parts.findIndex((x) => x.length === 4);
+			if (yearAt >= 0 && o.indexOf("Y") !== yearAt) {
+				const rest = parts.filter((_, i) => i !== yearAt);
+				const dayFirst = o.indexOf("D") < o.indexOf("M");
+				const moved = safeDay(
+					normaliseYear(parts[yearAt]),
+					Number(rest[dayFirst ? 1 : 0]) - 1,
+					Number(rest[dayFirst ? 0 : 1])
+				);
+				if (moved) return moved;
+			}
+			const got = fromOrderedParts(parts, o);
+			if (got) return got;
 		}
-		return fromOrderedParts(parts, order);
+		return null;
 	}
 
 	return null;
@@ -284,9 +508,19 @@ function fromOrderedParts(parts, order) {
 	);
 }
 
-/** The hint under an input: the shape this locale expects. */
-export function inputPlaceholder(locale = "en-GB") {
-	const order = fieldOrder(locale);
+/**
+ * The hint under an input.
+ *
+ * A token string is shown as itself, because `"D MMM YYYY"` is already a
+ * readable description of what to type and inventing a second notation for it
+ * would be worse. Everything else falls back to the locale's field order.
+ */
+export function inputPlaceholder(locale = "en-GB", format = null) {
+	if (typeof format === "string" && format.trim() !== "") {
+		// Strip the brackets off literals; they are notation, not content.
+		return format.replace(/\[([^\]]*)\]/g, "$1");
+	}
+	const order = fieldOrderFromFormat(format, locale) || fieldOrder(locale);
 	return order
 		.split("")
 		.map((l) => (l === "Y" ? "yyyy" : l === "M" ? "mm" : "dd"))

@@ -84,7 +84,7 @@ correct lockfile looks wrong when checked against them.
 | `isDayDisabled(date)` | `null` | Return true to refuse a day. |
 | `locale` | `"en-GB"` | Decides field order, month names and the placeholder. |
 | `weekStartsOn` | `1` (Monday) | |
-| `format` | `null` | A function, if you want something other than the locale's short date. |
+| `format` | `null` | A token string, an `Intl.DateTimeFormat` options object, or a function. See [Formatting](#formatting). |
 | `label`, `message`, `placeholder`, `name`, `id` | | |
 | `disabled`, `readOnly`, `required` | `false` | |
 | `clearable` | `true` | Shows a clear button and a Clear action. |
@@ -149,6 +149,63 @@ Same bounds, locale and value props, plus `mode` (`"single"` or `"range"`),
 `footer`.
 
 In range mode the value is `[start, end]`, either of which may be `null`.
+
+## Formatting
+
+`format` takes any of three shapes, on the same prop:
+
+```jsx
+<DzDatePicker format="D MMM YYYY" />           // token string
+<DzDatePicker format={{ dateStyle: "medium" }} />  // Intl options
+<DzDatePicker format={(d) => myOwnFormatter(d)} /> // a function
+```
+
+**A token string** uses the convention from dayjs, moment and date-fns:
+
+| Token | Gives | Token | Gives |
+| --- | --- | --- | --- |
+| `YYYY` | 2026 | `D` | 20 |
+| `YY` | 26 | `dddd` | Friday |
+| `MMMM` | November | `ddd` | Fri |
+| `MMM` | Nov | `dd` | F |
+| `MM` | 11 | `[text]` | `text`, untouched |
+| `M` | 11 (unpadded) | | |
+| `DD` | 20 | | |
+
+Month and weekday names come from `Intl` in the active locale, so
+`format="dddd D MMMM YYYY"` with `locale="fr-FR"` gives
+`vendredi 20 novembre 2026`. This library carries no locale data of its own and
+that is the point.
+
+Square brackets escape literal text: `"[on] D MMM"` gives `on 20 Nov` rather
+than treating the `o` and `n` as tokens.
+
+There are **no time tokens**. Every value here is a `Date` at local midnight, so
+`HH:mm` could only ever print `00:00`, and a token that is always a lie is worse
+than one that is absent. There is no `Do` either: ordinal suffixes need a table
+per language, which is the locale data this library exists not to carry.
+
+**An options object** is handed straight to `Intl.DateTimeFormat`, which is the
+genuinely standard way to format a date in JavaScript and is what this library
+uses internally. An invalid bag falls back to the default rather than throwing.
+
+**Whatever `format` prints, the field can read back.** The format's own field
+order is tried before the locale's, so `format="DD/MM/YYYY"` under `en-US`
+formats and parses the same way round instead of printing `20/11/2026` and then
+refusing it. The locale's order is still tried as a fallback, so someone who
+always types `20/11/2026` is not retrained by a format prop.
+
+## Locale
+
+`locale` defaults to `"en-GB"` and `weekStartsOn` to Monday, everywhere, and
+nothing here ever reads `navigator.language`.
+
+That is deliberate rather than an oversight. Reading the browser's locale during
+render gives the server and the client different output for the same component,
+which React reports as a hydration mismatch and which shows up as a date
+flickering from one order to another on load. If you want the viewer's locale,
+read it in an effect or on the server and pass it down as a prop, where you
+control when it changes.
 
 ## Typing in the field
 
@@ -226,7 +283,7 @@ scope. Tokens go on `:root` or on a theme wrapper.
 
 ```bash
 npm install          # esbuild, nothing else
-npm test             # 144 tests, no dependencies
+npm test             # 170 tests, no dependencies
 npm run demo         # http://127.0.0.1:5181
 ```
 
@@ -253,7 +310,12 @@ shortcuts rail, and a light and dark toggle.
   invert the range starts a fresh one instead of swapping.
 - **Parsing**: every accepted shape above, both field orders, the year pivot,
   rejection of impossible dates, and a round-trip of the formatter's own output
-  in four locales.
+  in four locales **for every format shape**: eight token patterns, five
+  `Intl` options bags and the default, against four dates including a leap day
+  and a year end.
+- **Token rendering**: padded and unpadded tokens, two-digit years, the three
+  weekday widths, square-bracket escaping, and names coming from `Intl` in
+  fr-FR, de-DE and es-ES rather than a table in the source.
 
 Tests run under `TZ=Europe/London`, set by the npm script, because the
 clock-change cases are only meaningful in a zone that observes daylight saving.

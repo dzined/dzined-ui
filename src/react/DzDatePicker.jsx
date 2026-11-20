@@ -180,7 +180,11 @@ export function DzDatePicker({
 				return;
 			}
 
-			const parsed = parseDay(next, { locale, reference: selected || todayDate() });
+			const parsed = parseDay(next, {
+				locale,
+				format,
+				reference: selected || todayDate(),
+			});
 			if (!parsed) {
 				// Not an error yet: "2" on the way to "20/11" does parse, but "20/" does
 				// not, and flashing red between keystrokes is noise. The message waits
@@ -211,7 +215,11 @@ export function DzDatePicker({
 			setTypedError(null);
 			return;
 		}
-		const parsed = parseDay(raw, { locale, reference: selected || todayDate() });
+		const parsed = parseDay(raw, {
+			locale,
+			format,
+			reference: selected || todayDate(),
+		});
 		if (!parsed) {
 			setTypedError("Not a date we could read");
 			return;
@@ -255,7 +263,7 @@ export function DzDatePicker({
 
 	const invalid = Boolean(typedError);
 	const shownMessage = typedError || message;
-	const hint = placeholder ?? inputPlaceholder(locale);
+	const hint = placeholder ?? inputPlaceholder(locale, format);
 
 	/*
 	 * Today and Clear, handed to the calendar so they sit inside its one panel.

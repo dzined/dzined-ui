@@ -217,6 +217,7 @@ export function DzDateRangePicker({
 
 			const parsed = parseDay(raw, {
 				locale,
+				format,
 				reference: (which === "start" ? start : end) || start || end || undefined,
 			});
 			if (!parsed) {
@@ -245,7 +246,7 @@ export function DzDateRangePicker({
 				});
 			}
 		},
-		[commitRange, end, isDayDisabled, locale, maxDay, minDay, start]
+		[commitRange, end, format, isDayDisabled, locale, maxDay, minDay, start]
 	);
 
 	const onFieldBlur = useCallback(
@@ -256,7 +257,11 @@ export function DzDateRangePicker({
 				setErrors((e) => ({ ...e, [which]: null }));
 				return;
 			}
-			const parsed = parseDay(raw, { locale, reference: start || end || undefined });
+			const parsed = parseDay(raw, {
+				locale,
+				format,
+				reference: start || end || undefined,
+			});
 			if (!parsed) {
 				setErrors((e) => ({ ...e, [which]: "Not a date we could read" }));
 				return;
@@ -323,7 +328,7 @@ export function DzDateRangePicker({
 
 	const invalid = Boolean(errors.start || errors.end);
 	const shownMessage = errors.start || errors.end || message;
-	const hint = inputPlaceholder(locale);
+	const hint = inputPlaceholder(locale, format);
 
 	const field = (which) => {
 		const isStart = which === "start";
