@@ -123,6 +123,76 @@ function Basics() {
 	);
 }
 
+/*
+ * The three shapes of `format`, side by side with what each one accepts back.
+ *
+ * The thing to check here is not that they print correctly, which the tests
+ * cover, but that each field reads back what it just printed. The field order
+ * for a token string is taken from the pattern rather than the locale, which is
+ * what stops "DD/MM/YYYY" under en-US printing a date it then refuses.
+ */
+function Formats() {
+	const [token, setToken] = useState(today());
+	const [bag, setBag] = useState(today());
+	const [fn, setFn] = useState(today());
+	const [usa, setUsa] = useState(today());
+
+	return (
+		<div className="row">
+			<div className="col">
+				<span className="tag">Token string</span>
+				<DzDatePicker
+					label="D MMM YYYY"
+					format="D MMM YYYY"
+					value={token}
+					onChange={setToken}
+				/>
+				<Readout label="value" value={token} />
+			</div>
+			<div className="col">
+				<span className="tag">Weekday token</span>
+				<DzDatePicker
+					label="dddd D MMMM YYYY"
+					format="dddd D MMMM YYYY"
+					defaultValue={today()}
+				/>
+			</div>
+			<div className="col">
+				<span className="tag">Intl options</span>
+				<DzDatePicker
+					label="{ dateStyle: 'long' }"
+					format={{ dateStyle: "long" }}
+					value={bag}
+					onChange={setBag}
+				/>
+				<Readout label="value" value={bag} />
+			</div>
+			<div className="col">
+				<span className="tag">Function</span>
+				<DzDatePicker
+					label="custom"
+					format={(d) => `day ${d.getDate()} of ${d.getFullYear()}`}
+					value={fn}
+					onChange={setFn}
+				/>
+				<Readout label="value" value={fn} />
+			</div>
+			<div className="col">
+				<span className="tag">DMY pattern, US locale</span>
+				<DzDatePicker
+					label="DD/MM/YYYY under en-US"
+					locale="en-US"
+					format="DD/MM/YYYY"
+					value={usa}
+					onChange={setUsa}
+					message="Prints and reads day-first despite the locale"
+				/>
+				<Readout label="value" value={usa} />
+			</div>
+		</div>
+	);
+}
+
 function SideBySide({ mode }) {
 	const [ours, setOurs] = useState(null);
 	const [theirs, setTheirs] = useState(null);
@@ -384,6 +454,13 @@ function App() {
 					note="Controlled and uncontrolled, bounds, a disabled-day predicate, and typing. The field commits on every keystroke that parses, so the calendar follows what you type."
 				>
 					<Basics />
+				</Section>
+
+				<Section
+					title="Formatting"
+					note="The same format prop takes a token string, an Intl options bag or a function. Each field has to read back what it prints: the field order comes from the format before the locale, which is what the last one demonstrates."
+				>
+					<Formats />
 				</Section>
 
 				<Section

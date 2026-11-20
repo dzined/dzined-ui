@@ -187,6 +187,11 @@ There are **no time tokens**. Every value here is a `Date` at local midnight, so
 than one that is absent. There is no `Do` either: ordinal suffixes need a table
 per language, which is the locale data this library exists not to carry.
 
+A long pattern needs a wide field. `"dddd D MMMM YYYY"` is 23 characters and an
+input scrolls rather than wraps, so in a narrow column it will show the start of
+the date and hide the year. Give the field `fullWidth`, or more room, when you
+pick a verbose format.
+
 **An options object** is handed straight to `Intl.DateTimeFormat`, which is the
 genuinely standard way to format a date in JavaScript and is what this library
 uses internally. An invalid bag falls back to the default rather than throwing.
