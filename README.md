@@ -7,8 +7,40 @@ no watermark. It works in the portal (Next.js + MUI + Emotion) and in the plain
 Next.js customer sites that have none of those.
 
 ```
-npm install github:dzined/dzined-ui#v0.1.0
+npm install github:dzined/dzined-ui#v0.1.2
 ```
+
+**Pin a tag, never a branch.** A branch pin means a push here silently changes
+what a deployed site is running, which is the whole thing a pin is for.
+
+### Which tag
+
+**Use `v0.1.2`.** The two before it are superseded and a git tag cannot carry a
+warning of its own, so it has to live here:
+
+| tag | commit | do not use, because |
+| --- | --- | --- |
+| `v0.1.0` | `6e962bd` | Dark mode fills the selected day with the logo teal `#18cdc7`, the same hue the range highlight uses at low alpha, so the whole calendar goes monochrome teal. Fixed in `v0.1.1`. |
+| `v0.1.1` | `f06da31` | The colours are right, but `package.json` still says `0.1.0`, so this tag and `v0.1.0` are indistinguishable to `npm ls` and in a lockfile's `version` field. Fixed in `v0.1.2`. |
+| `v0.1.2` | `827241d` | Current. |
+
+None of them was moved, deliberately: anything already installed against an old
+tag keeps resolving to the commit it resolved to. That is also why there are
+three tags for what is nearly one release.
+
+**Checking an install.** The lockfile's `resolved` SHA is the pin that actually
+binds; its `version` field is only as truthful as this package's own
+`package.json`, which is exactly what went wrong between `v0.1.0` and `v0.1.1`.
+Check the SHA, not the version string.
+
+### It is a private repository
+
+`npm` resolves this to `git+ssh://git@github.com/dzined/dzined-ui.git`, so an
+install needs an SSH key that can read it. That works on a developer's machine
+and **fails on a CI or Netlify build**, which has no such key. Each consuming
+site needs its own Netlify deploy key added here, read-only, under Settings,
+Deploy keys. A local `npm install` succeeding is therefore not evidence that
+the site will deploy.
 
 ```jsx
 import { DzDatePicker } from "@dzined/ui";
